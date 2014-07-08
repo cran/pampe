@@ -1,0 +1,5 @@
+exportPattern("^[[:alpha:]]+")
+import(leaps)
+S3method(summary, pampe)
+S3method(plot, pampe)
+S3method(plot, robustness)

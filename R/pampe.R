@@ -1,5 +1,93 @@
 pampe <-
 function(time.pretr, time.tr, treated, controls = "All", data, nbest=1, nvmax=length(controls), select="AICc", placebos=FALSE){
+  
+   ##Set pre-tr and tr periods
+    if (length(time.pretr)>2){
+      time.pretr <- c(time.pretr[1],time.pretr[length(time.pretr)])
+    }
+    
+    if (length(time.tr)>2){
+      time.tr <- c(time.tr[1],time.tr[length(time.tr)])
+    }
+    
+test <- tryCatch(!is.null(time(data)), error=function(e) e)
+if (inherits(test, "error")){
+  if(is.numeric(time.pretr)){
+    #If rownames are set
+    if(is.character(rownames(data))){
+      if (time.pretr[1] %in% rownames(data) & time.pretr[2] %in% rownames(data)){
+        time.pretr<-which(rownames(data)==time.pretr[1]):which(rownames(data)==time.pretr[2])
+      } else{time.pretr <- time.pretr[1]:time.pretr[2]}
+    } else{ #If rownames are not set
+      time.pretr <- time.pretr[1]:time.pretr[2]
+    }
+    
+  }
+  
+  if(is.numeric(time.tr)){
+    #If rownames are set
+    if(is.character(rownames(data))){
+      if (time.tr[1] %in% rownames(data) & time.tr[2] %in% rownames(data)){
+       time.tr<-which(rownames(data)==time.tr[1]):which(rownames(data)==time.tr[2])
+      } else{time.tr <- time.tr[1]:time.tr[2]} 
+    } else{ #If rownames are not set
+      time.tr <- time.tr[1]:time.tr[2]
+    }
+    
+  }
+  
+  if(class(time.pretr)=="character"){
+    time.pretr<-which(rownames(data)==time.pretr[1]):which(rownames(data)==time.pretr[2])
+  }
+  
+  if(class(time.tr)=="character"){
+    time.tr<-which(rownames(data)==time.tr[1]):which(rownames(data)==time.tr[2])
+  }  
+  
+  
+} else if(!is.null(time(data))){
+      if  (!is.na(which(time(data) %in% time.pretr)[1]) & !is.na(which(time(data) %in% time.pretr)[2])){
+      time.pretr <- which(time(data) %in% time.pretr)[1]:which(time(data) %in% time.pretr)[2]
+      } else {time.pretr <- time.pretr[1]:time.pretr[2]}
+      if  (!is.na(which(time(data) %in% time.tr)[1]) & !is.na(which(time(data) %in% time.tr)[2])){
+      time.tr    <- which(time(data) %in% time.tr)[1]:which(time(data) %in% time.tr)[2]
+      } else{time.tr <- time.tr[1]:time.tr[2]}
+} else {
+  if(is.numeric(time.pretr)){
+    #If rownames are set
+    if(is.character(rownames(data))){
+      if (time.pretr[1] %in% rownames(data) & time.pretr[2] %in% rownames(data)){
+        time.pretr<-which(rownames(data)==time.pretr[1]):which(rownames(data)==time.pretr[2])
+      } else{time.pretr <- time.pretr[1]:time.pretr[2]}
+    } else{ #If rownames are not set
+      time.pretr <- time.pretr[1]:time.pretr[2]
+    }
+    
+  }
+  
+  if(is.numeric(time.tr)){
+    #If rownames are set
+    if(is.character(rownames(data))){
+      if (time.tr[1] %in% rownames(data) & time.tr[2] %in% rownames(data)){
+        time.tr<-which(rownames(data)==time.tr[1]):which(rownames(data)==time.tr[2])
+      } else{time.tr <- time.tr[1]:time.tr[2]} 
+    } else{ #If rownames are not set
+      time.tr <- time.tr[1]:time.tr[2]
+    }
+    
+  }
+  
+  
+    if(class(time.pretr)=="character"&is.null(time(data))){
+      time.pretr<-which(rownames(data)==time.pretr[1]):which(rownames(data)==time.pretr[2])
+    }
+
+    if(class(time.tr)=="character"&is.null(time(data))){
+      time.tr<-which(rownames(data)==time.tr[1]):which(rownames(data)==time.tr[2])
+    }  
+    }  
+    
+    
     
     intercept=TRUE
     
@@ -19,21 +107,25 @@ function(time.pretr, time.tr, treated, controls = "All", data, nbest=1, nvmax=le
       treated <- colnames(data)[treated]
     }
     
+    if(is.null(rownames(data))){
+      rownames(data) <- 1:nrow(data)
+    }
     
-    #When user choose not to use all the controls in the table, choose the specific one from the table.
-    if (class(controls)=="character"){
+    if(is.null(colnames(data))){
+      colnames(data) <- 1:ncol(data)
+    }
+    
+    #When user chooses not to use all the controls in the table, choose the specific one from the table.
+
       if(controls[1]!="All"){
         controls <- which(colnames(data) %in% controls)
       }
-    }
-    else {
-      stop("The 'controls' variable should be class of character, check your data again")
-    }
     
-    #When user use all the controls, then submit all the variables in the table, exluding the treated one.
+
+    #When user uses all the controls, then submit all the variables in the table, exluding the treated one.
     if (controls[1]=="All"){
       controls <- -which(colnames(data)==treated)
-      #When the pretreatment duration is not enough, we just get the as much control variables as not violating the degree of freedom.
+      #When the pretreatment duration is not enough, we just use as many control variables as possible so as not to violate the degree of freedom.
       if (nvmax==length(controls)){
         if (ncol(data[,controls])+3>=length(time.pretr)){
           nvmax <- length(time.pretr)-4
@@ -54,31 +146,7 @@ function(time.pretr, time.tr, treated, controls = "All", data, nbest=1, nvmax=le
     }
     
     
-    
-    if (class(time.pretr)=="character"){
-      #   While it could be boring to let user type in all of the time pretr, especially when the durition is long.
-      #   How about we creat a function that let them type in like c(1993Q1,2003Q4) and transplant them into numerical 
-      #   class? The user could use time.pretr <- c("1993Q1","2003Q4");time.tr <- c("2004Q1","2008Q1"), and for example:
-      
-      #   TimeCharToNum<-function(time,data){
-      #     time<-which(rownames(data)==time[1]):which(rownames(data)==time[2]);
-      #     return(time);
-      #   };
-      #   time.pretr<-TimeCharToNum(time=time.pretr,data=growth)
-    }
-    
-    
-    
-    
-    
-    if (class(time.tr)=="character"){
-      #   TimeCharToNum<-function(time,data){
-      #     time<-which(rownames(data)==time[1]):which(rownames(data)==time[2]);
-      #     return(time);
-      #   };
-      #   time.tr<-TimeCharToNum(time=time.tr,data=growth)
-    }
-    
+
     
     if (nvmax+3>=length(time.pretr)){
       stop("You have selected too many controls. Please change the 'nvmax' setting.")
@@ -95,7 +163,7 @@ function(time.pretr, time.tr, treated, controls = "All", data, nbest=1, nvmax=le
     controls <- unlist(strsplit(select.criteria[which.min(select.criteria[,select]),'model'], split=" + ", fixed=TRUE))
     #Set model, compute OLS
     
-    fmla <- as.formula(paste(treated, " ~ ", paste(controls, collapse= "+")))
+    fmla <- paste(paste("`", treated, "`", sep=""), " ~ ", paste(paste("`", controls, "`", sep=""), collapse= "+"))
     ols <- invisible(lm(fmla, data=data[time.pretr,]))
     
     ## TR EFFECT RESULTS
@@ -148,7 +216,7 @@ function(time.pretr, time.tr, treated, controls = "All", data, nbest=1, nvmax=le
         
         controls <- unlist(strsplit(select.criteria[which.min(select.criteria[,select]),'model'], split=" + ", fixed=TRUE))
         #Set model, compute OLS
-        fmla <- as.formula(paste(treated, " ~ ", paste(controls, collapse= "+")))
+        fmla <- paste(paste("`", treated, "`", sep=""), " ~ ", paste(paste("`", controls, "`", sep=""), collapse= "+"))
         #ols.placebo[[i]] <- invisible(lm(fmla, data=data[time.pretr,]))
         temp.placebo <- lm(fmla, data=data[time.pretr,])
         placebo.r2[i] <- summary(temp.placebo)$r.squared
@@ -199,7 +267,7 @@ function(time.pretr, time.tr, treated, controls = "All", data, nbest=1, nvmax=le
         
         controls <- unlist(strsplit(select.criteria[which.min(select.criteria[,select]),'model'], split=" + ", fixed=TRUE))
         #Set model, compute OLS
-        fmla <- as.formula(paste(treated, " ~ ", paste(controls, collapse= "+")))
+        fmla <- paste(paste("`", treated, "`", sep=""), " ~ ", paste(paste("`", controls, "`", sep=""), collapse= "+"))
         #ols.placebo[[i]] <- invisible(lm(fmla, data=data[time.pretr,]))
         temp.placebo <- lm(fmla, data=data[time.pretr,])
         placebo.r2[i] <- summary(temp.placebo)$r.squared
@@ -221,28 +289,30 @@ function(time.pretr, time.tr, treated, controls = "All", data, nbest=1, nvmax=le
       
     } #End time placebo study
     
+    #data <- as.matrix(data)
+    
     #Show results
     print(summary(ols))
     if (FALSE %in% placebos){
-      print(summary(ols))
-      result <- list(controls=controls, model=ols, counterfactual=results)
+    
+      result <- list(controls=controls, model=ols, counterfactual=results, data=data)
       class(result) <- "pampe"
       return(result) }
     
     if (("controls" %in% placebos)==TRUE&length(placebos)==1) {
-      result <-list(controls=controls.estim, model=ols, counterfactual=results,placebo.ctrl=list(mspe=mspe.ctrl, tr.effect=tr.effect.ctrl))
+      result <-list(controls=controls.estim, model=ols, counterfactual=results,placebo.ctrl=list(mspe=mspe.ctrl, tr.effect=tr.effect.ctrl), data=data)
       class(result) <- "pampe"
       return(result)
     }
     
     if (("time" %in% placebos)==TRUE&length(placebos)==1) {
-      result <- list(controls=controls.estim, model=ols, counterfactual=results,placebo.time=list(mspe=mspe.time, tr.effect=tr.effect.time))
+      result <- list(controls=controls.estim, model=ols, counterfactual=results,placebo.time=list(mspe=mspe.time, tr.effect=tr.effect.time), data=data)
       class(result) <- "pampe"
       return(result)
     }
     
     if (length(placebos)==2) {
-      result <- list(controls=controls.estim, model=ols, counterfactual=results,placebo.ctrl=list(mspe=mspe.ctrl, tr.effect=tr.effect.ctrl), placebo.time=list(mspe=mspe.time, tr.effect=tr.effect.time))
+      result <- list(controls=controls.estim, model=ols, counterfactual=results,placebo.ctrl=list(mspe=mspe.ctrl, tr.effect=tr.effect.ctrl), placebo.time=list(mspe=mspe.time, tr.effect=tr.effect.time), data=data)
       class(result) <- "pampe"
       return(result)}
     

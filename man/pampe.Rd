@@ -3,6 +3,7 @@
 \alias{pampe}
 \alias{plot.pampe}
 \alias{summary.pampe}
+\alias{xtable.pampe}
 \title{
 Implementation of the Panel Data Approach for Program Evaluation
 }
@@ -16,10 +17,10 @@ data(growth)
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{time.pretr}{
-The pre-treatment periods, up to the introduction of the treatment. For example, if you have 10 pre-treatment periods and the treatment was introduced in the 11th period, this argument could be 1:10.
+The pre-treatment periods, up to the introduction of the treatment. Giving the start and end of the pre-treatment period is enough. For example, if you have 10 pre-treatment periods and the treatment was introduced in the 11th period, this argument could be 1:10 or c(1,10). If the data has rownames, you can also pass on the time.pretr as c("1993Q1", "2003Q4").
 }
   \item{time.tr}{
-The treatment period plus the periods for which you want to check the effect. For example, if the treatment was introduced in the 11th period and you want results for 9 more periods, it would be 11:20.
+The treatment period plus the periods for which you want to check the effect. Again, giving the start and end of the pre-treatment period is enough. For example, if the treatment was introduced in the 11th period and you want results for 9 more periods, it would be 11:20 or c(11,20). If the data has rownames, you can also pass on the time.pretr as c("2004Q1", "2008Q1").
 }
   \item{treated}{
 The treated unit, the unit that receives the intervention. It can be a name or the index of the column if the columns in the data matrix are named (recommended). For example, in the case of the growth data included in the package, the name of the treated unit is "HongKong", and it is in the first column of the data matrix, so this argument can be either "HongKong" or 1.
@@ -30,7 +31,7 @@ The units used as controls to calculate the counterfactual, that have not receiv
 
 }
   \item{data}{
-The name of the data matrix to be used, e.g. growth. The data matrix should be in standard cross-sectional format: with the variables (the controls/units in the donor pool pool act as explanatory variables) extending across the columns and the quarters (time-periods) extending across rows. It is important for the user to have his or her data in this standard format to correctly apply the function. Naming the rows and especially the columns is also strongly recommended. Be careful to avoid characters such as spacing when naming.
+The name of the data matrix to be used, e.g. growth. The data matrix should be in standard cross-sectional format: with the variables (the controls/units in the donor pool pool act as explanatory variables) extending across the columns and the quarters (time-periods) extending across rows.  It is important for the user to have his or her data in this standard format to correctly apply the pampe function (check the \code{\link{pampeData}} function for help with reformatting the data prior to running pampe). Properly naming the rows and especially the columns is also recommended. 
 }
   \item{nbest}{
 The original method by Hsiao, Steve Ching and Ki Wan (2012) specifies to keep the best model in terms of R squared for each order, hence the default is one. However the user might choose to keep the best 2, 3... before moving on to the second step of the method by switching this argument default.
@@ -62,9 +63,10 @@ A list of objects, including:
   \item{counterfactual}{ the path of the estimated counterfactual for the time.pretr and time.tr periods. }
   \item{placebo.ctrl}{ if the user has chosen to perform the placebo test which reassigns the treatment to the controls in the original donor pool, this element is a list which includes another two elements: mspe and tr.effect. The first includes the mspe for the pre-treatment period (time.pretr) and the second is the estimated treatment effect for the treated unit in the first column and for the countries in the original donor pool in the remaining columns. }
     \item{placebo.time}{ same as placebo.ctrl but with the reassignment of the treatment in time, to periods in the pre-treatment period. }
+    \item{data}{ initial data, for further use. }
 }
 \references{
-Abadie A, Diamond A, Hainmueller J (2010). "Control Methods for Comparative Case Studies: Estimating the Effect of California’s Tobacco Control Program". American Statistical Association, (105), 493-505.
+Abadie A, Diamond A, Hainmueller J (2010). "Control Methods for Comparative Case Studies: Estimating the Effect of California's Tobacco Control Program". American Statistical Association, (105), 493-505.
 
 Abadie A, Diamond A, Hainmueller J (2014). "Comparative Politics and the Synthetic Control Method". American Journal of Political Science. URL http://dx.doi.org/10.2139/ ssrn.1950298.
 
@@ -83,6 +85,8 @@ Check the references for more information on the placebo studies. The leaps pack
 
 
 \seealso{
+\code{\link{pampeData}}
+\code{\link{robustness}}
 \code{\link{leaps}}
 }
 \examples{
@@ -180,6 +184,9 @@ legend("topleft",c("Hong Kong", "Controls"),col=c("red", 1),lty=c(1,2),lwd=c(5,2
 abline(h=0,lty=3, lwd=3)
 ##Not significant either
 
+##Leave-one-out robustness check
+robust <- robustness(pol.integ)
+plot(robust)
 }
 % Add one or more standard keywords, see file 'KEYWORDS' in the
 % R documentation directory.

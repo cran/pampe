@@ -1,11 +1,14 @@
 plot.robustness <-
-function(x, ...){
-  robustness.object  <- x
-  
-  if (class(robustness.object) != "robust-pampe"){
+  function(x, ... ){
+    
+    robustness.object <- x
+    
+    
+  if (class(robustness.object) != "robustness"){
     stop("Wrong object class")
   } 
   
+
   
   linewidth  <- matrix(1, 1, ncol(robustness.object)-2)
   linewidth <- append(linewidth, c(2,2), after = 0)
@@ -24,3 +27,4 @@ function(x, ...){
          col=c(1, 1, "gray"),lty=c(1,2,1),lwd=c(2,2, 1))
   
 }
+

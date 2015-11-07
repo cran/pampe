@@ -1,93 +1,5 @@
 pampe <-
 function(time.pretr, time.tr, treated, controls = "All", data, nbest=1, nvmax=length(controls), select="AICc", placebos=FALSE){
-  
-   ##Set pre-tr and tr periods
-    if (length(time.pretr)>2){
-      time.pretr <- c(time.pretr[1],time.pretr[length(time.pretr)])
-    }
-    
-    if (length(time.tr)>2){
-      time.tr <- c(time.tr[1],time.tr[length(time.tr)])
-    }
-    
-test <- tryCatch(!is.null(time(data)), error=function(e) e)
-if (inherits(test, "error")){
-  if(is.numeric(time.pretr)){
-    #If rownames are set
-    if(is.character(rownames(data))){
-      if (time.pretr[1] %in% rownames(data) & time.pretr[2] %in% rownames(data)){
-        time.pretr<-which(rownames(data)==time.pretr[1]):which(rownames(data)==time.pretr[2])
-      } else{time.pretr <- time.pretr[1]:time.pretr[2]}
-    } else{ #If rownames are not set
-      time.pretr <- time.pretr[1]:time.pretr[2]
-    }
-    
-  }
-  
-  if(is.numeric(time.tr)){
-    #If rownames are set
-    if(is.character(rownames(data))){
-      if (time.tr[1] %in% rownames(data) & time.tr[2] %in% rownames(data)){
-       time.tr<-which(rownames(data)==time.tr[1]):which(rownames(data)==time.tr[2])
-      } else{time.tr <- time.tr[1]:time.tr[2]} 
-    } else{ #If rownames are not set
-      time.tr <- time.tr[1]:time.tr[2]
-    }
-    
-  }
-  
-  if(class(time.pretr)=="character"){
-    time.pretr<-which(rownames(data)==time.pretr[1]):which(rownames(data)==time.pretr[2])
-  }
-  
-  if(class(time.tr)=="character"){
-    time.tr<-which(rownames(data)==time.tr[1]):which(rownames(data)==time.tr[2])
-  }  
-  
-  
-} else if(!is.null(time(data))){
-      if  (!is.na(which(time(data) %in% time.pretr)[1]) & !is.na(which(time(data) %in% time.pretr)[2])){
-      time.pretr <- which(time(data) %in% time.pretr)[1]:which(time(data) %in% time.pretr)[2]
-      } else {time.pretr <- time.pretr[1]:time.pretr[2]}
-      if  (!is.na(which(time(data) %in% time.tr)[1]) & !is.na(which(time(data) %in% time.tr)[2])){
-      time.tr    <- which(time(data) %in% time.tr)[1]:which(time(data) %in% time.tr)[2]
-      } else{time.tr <- time.tr[1]:time.tr[2]}
-} else {
-  if(is.numeric(time.pretr)){
-    #If rownames are set
-    if(is.character(rownames(data))){
-      if (time.pretr[1] %in% rownames(data) & time.pretr[2] %in% rownames(data)){
-        time.pretr<-which(rownames(data)==time.pretr[1]):which(rownames(data)==time.pretr[2])
-      } else{time.pretr <- time.pretr[1]:time.pretr[2]}
-    } else{ #If rownames are not set
-      time.pretr <- time.pretr[1]:time.pretr[2]
-    }
-    
-  }
-  
-  if(is.numeric(time.tr)){
-    #If rownames are set
-    if(is.character(rownames(data))){
-      if (time.tr[1] %in% rownames(data) & time.tr[2] %in% rownames(data)){
-        time.tr<-which(rownames(data)==time.tr[1]):which(rownames(data)==time.tr[2])
-      } else{time.tr <- time.tr[1]:time.tr[2]} 
-    } else{ #If rownames are not set
-      time.tr <- time.tr[1]:time.tr[2]
-    }
-    
-  }
-  
-  
-    if(class(time.pretr)=="character"&is.null(time(data))){
-      time.pretr<-which(rownames(data)==time.pretr[1]):which(rownames(data)==time.pretr[2])
-    }
-
-    if(class(time.tr)=="character"&is.null(time(data))){
-      time.tr<-which(rownames(data)==time.tr[1]):which(rownames(data)==time.tr[2])
-    }  
-    }  
-    
-    
     
     intercept=TRUE
     
@@ -101,6 +13,9 @@ if (inherits(test, "error")){
       stop("Treatment period has exceeded the data.")
     }  
     
+    if (length(which(is.na(data)))>0){
+      stop("There are missing values in the data. Pampe does not allow for unbalanced data at this point.")
+    }
     
     #Choose the treated unit. This if is used to deal with the treated with numeric class.
     if (class(treated) == "numeric"){
@@ -146,7 +61,31 @@ if (inherits(test, "error")){
     }
     
     
-
+    
+    if (class(time.pretr)=="character"){
+      #   While it could be boring to let user type in all of the time pretr, especially when the durition is long.
+      #   How about we creat a function that let them type in like c(1993Q1,2003Q4) and transplant them into numerical 
+      #   class? The user could use time.pretr <- c("1993Q1","2003Q4");time.tr <- c("2004Q1","2008Q1"), and for example:
+      
+      #   TimeCharToNum<-function(time,data){
+      #     time<-which(rownames(data)==time[1]):which(rownames(data)==time[2]);
+      #     return(time);
+      #   };
+      #   time.pretr<-TimeCharToNum(time=time.pretr,data=growth)
+    }
+    
+    
+    
+    
+    
+    if (class(time.tr)=="character"){
+      #   TimeCharToNum<-function(time,data){
+      #     time<-which(rownames(data)==time[1]):which(rownames(data)==time[2]);
+      #     return(time);
+      #   };
+      #   time.tr<-TimeCharToNum(time=time.tr,data=growth)
+    }
+    
     
     if (nvmax+3>=length(time.pretr)){
       stop("You have selected too many controls. Please change the 'nvmax' setting.")
@@ -291,8 +230,7 @@ if (inherits(test, "error")){
     
     #data <- as.matrix(data)
     
-    #Show results
-    print(summary(ols))
+
     if (FALSE %in% placebos){
     
       result <- list(controls=controls, model=ols, counterfactual=results, data=data)

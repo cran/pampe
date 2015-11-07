@@ -3,6 +3,7 @@
 \alias{pampe}
 \alias{plot.pampe}
 \alias{summary.pampe}
+\alias{print.summary.pampe}
 \alias{xtable.pampe}
 \title{
 Implementation of the Panel Data Approach for Program Evaluation
@@ -17,10 +18,10 @@ data(growth)
 %- maybe also 'usage' for other objects documented here.
 \arguments{
   \item{time.pretr}{
-The pre-treatment periods, up to the introduction of the treatment. Giving the start and end of the pre-treatment period is enough. For example, if you have 10 pre-treatment periods and the treatment was introduced in the 11th period, this argument could be 1:10 or c(1,10). If the data has rownames, you can also pass on the time.pretr as c("1993Q1", "2003Q4").
+The pre-treatment periods, up to the introduction of the treatment. For example, if you have 10 pre-treatment periods and the treatment was introduced in the 11th period, this argument could be 1:10.
 }
   \item{time.tr}{
-The treatment period plus the periods for which you want to check the effect. Again, giving the start and end of the pre-treatment period is enough. For example, if the treatment was introduced in the 11th period and you want results for 9 more periods, it would be 11:20 or c(11,20). If the data has rownames, you can also pass on the time.pretr as c("2004Q1", "2008Q1").
+The treatment period plus the periods for which you want to check the effect. For example, if the treatment was introduced in the 11th period and you want results for 9 more periods, it would be 11:20.
 }
   \item{treated}{
 The treated unit, the unit that receives the intervention. It can be a name or the index of the column if the columns in the data matrix are named (recommended). For example, in the case of the growth data included in the package, the name of the treated unit is "HongKong", and it is in the first column of the data matrix, so this argument can be either "HongKong" or 1.
@@ -31,7 +32,7 @@ The units used as controls to calculate the counterfactual, that have not receiv
 
 }
   \item{data}{
-The name of the data matrix to be used, e.g. growth. The data matrix should be in standard cross-sectional format: with the variables (the controls/units in the donor pool pool act as explanatory variables) extending across the columns and the quarters (time-periods) extending across rows.  It is important for the user to have his or her data in this standard format to correctly apply the pampe function (check the \code{\link{pampeData}} function for help with reformatting the data prior to running pampe). Properly naming the rows and especially the columns is also recommended. 
+The name of the data matrix to be used, e.g. growth. The data matrix should be in standard cross-sectional format: with the variables (the controls/units in the donor pool pool act as explanatory variables) extending across the columns and the quarters (time-periods) extending across rows. It is important for the user to have his or her data in this standard format to correctly apply the function. Naming the rows and especially the columns is also strongly recommended. Be careful to avoid characters such as spacing when naming.
 }
   \item{nbest}{
 The original method by Hsiao, Steve Ching and Ki Wan (2012) specifies to keep the best model in terms of R squared for each order, hence the default is one. However the user might choose to keep the best 2, 3... before moving on to the second step of the method by switching this argument default.
@@ -85,8 +86,6 @@ Check the references for more information on the placebo studies. The leaps pack
 
 
 \seealso{
-\code{\link{pampeData}}
-\code{\link{robustness}}
 \code{\link{leaps}}
 }
 \examples{
